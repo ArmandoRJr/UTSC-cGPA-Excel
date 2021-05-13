@@ -2,7 +2,12 @@ from typing import List
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Alignment, Protection, Font
 
-#-------------------CONSTANTS-------------------
+#---------------------------CONSTANTS--------------------------------------
+sheet_list = []
+sheet_names = []
+sheet_row_index_list = []
+sheet_percent_index_list = []
+
 thin_border = Border(left=Side(style='thin'),
                     right=Side(style='thin'),
                     top=Side(style='thin'),
@@ -18,7 +23,7 @@ percent_style.font = ex_font
 percent_style.alignment = Alignment(horizontal='left')
 percent_style.number_format = '0.00%'
 
-im_sorry = """=IF(AND(E2*100<=100,E2*100>=90),4.2,
+im_sorry = """=IF(AND(E2*100<=100,E2*100>=90),4,
 IF(AND(E2*100<=89.99,E2*100>=85),4,
 IF(AND(E2*100<=84.99,E2*100>=80),3.7,
 IF(AND(E2*100<=79.99,E2*100>=77),3.3,
@@ -31,22 +36,10 @@ IF(AND(E2*100<=59.99,E2*100>=57),1.3,
 IF(AND(E2*100<=56.99,E2*100>=53),1,
 IF(AND(E2*100<=52.99,E2*100>=50),0.7,0))))))))))))""".replace('\n','')
 
-im_sorry_2 = """=IF(AND(E5*100<=100,E5*100>=90),4.2,
-IF(AND(E5*100<=89.99,E5*100>=85),4,
-IF(AND(E5*100<=84.99,E5*100>=80),3.7,
-IF(AND(E5*100<=79.99,E5*100>=77),3.3,
-IF(AND(E5*100<=76.99,E5*100>=73),3,
-IF(AND(E5*100<=72.99,E5*100>=70),2.7,
-IF(AND(E5*100<=69.99,E5*100>=67),2.3,
-IF(AND(E5*100<=66.99,E5*100>=63),2,
-IF(AND(E5*100<=62.99,E5*100>=60),1.7,
-IF(AND(E5*100<=59.99,E5*100>=57),1.3,
-IF(AND(E5*100<=56.99,E5*100>=53),1,
-IF(AND(E5*100<=52.99,E5*100>=50),0.7,0))))))))))))""".replace('\n','')
+#---------------------------------------------------------------------------
 
-#-----------------------------------------------
 
-#-------------------HELPERS---------------------
+#----------------------------------HELPERS----------------------------------
 def set_borders(starter_row: int, height: int) -> None:
 
     for row in range(starter_row, starter_row+height+2):
@@ -77,7 +70,6 @@ def enter_section(starter_row: int, height: int,
     for i in range(0, height):
         current_sheet['A'+str(starter_row+i+1)].font = ex_font
         current_sheet['A'+str(starter_row+i+1)] = subtitles[i]
-        current_sheet['B'+str(starter_row+i+1)].font = ex_font
         current_sheet['B'+str(starter_row+i+1)].style = percent_style
         current_sheet['B'+str(starter_row+i+1)].alignment = Alignment(horizontal='center')
         current_sheet['C'+str(starter_row+i+1)].style = percent_style
@@ -91,35 +83,31 @@ def enter_section(starter_row: int, height: int,
     
     if (add_type == 1):
         main_formula = "=IFERROR(SUM(B"+str(starter_row+height)+")/COUNTA(B"+str(starter_row+height)+"),0)"
-        current_sheet['B'+str(starter_row+height+1)] = main_formula
         sec_formula = "=C"+str(starter_row+height)+"*COUNTA(B"+str(starter_row+height)+")"
-        current_sheet['C'+str(starter_row+height+1)] = sec_formula
+        
     if (add_type == 2):
         b_range = ("B"+str(starter_row+1)+":B"+str(starter_row+height))
         c_range = ("C"+str(starter_row+1)+":C"+str(starter_row+height))
         main_formula = "=IFERROR(SUM("+b_range+")/COUNTA("+b_range+"),0)"
-        current_sheet['B'+str(starter_row+height+1)] = main_formula
         sec_formula = "=C"+str(starter_row+height)+"*COUNTA("+b_range+")"
-        current_sheet['C'+str(starter_row+height+1)] = sec_formula
     if (add_type == 3):
         b_range = ("B"+str(starter_row+1)+":B"+str(starter_row+height))
         c_range = ("C"+str(starter_row+1)+":C"+str(starter_row+height))
         main_formula = '=IFERROR(SUMPRODUCT('+b_range+','+c_range+')/SUMPRODUCT(--('+b_range+'<>""), '+c_range+'), 0)'
-        current_sheet['B'+str(starter_row+height+1)] = main_formula
         sec_formula = '=SUMIF('+b_range+', "<>", '+c_range+')'
-        current_sheet['C'+str(starter_row+height+1)] = sec_formula
     if (add_type == 4):
         b_range = ("B"+str(starter_row+1)+":B"+str(starter_row+height))
         c_range = ("C"+str(starter_row+1)+":C"+str(starter_row+height))
         main_formula = "=MAX(IFERROR(SUM("+b_range+")/COUNTA("+b_range+"),0), IFERROR(AVERAGE(LARGE("+b_range+",{"
         main_formula += ",".join(str(int) for int in list(range(1,topx+1)))
         main_formula += "})), IFERROR(SUM("+b_range+")/COUNTA("+b_range+"),0)))"
-        print(main_formula)
-        current_sheet['B'+str(starter_row+height+1)] = main_formula
         sec_formula = "=MIN(C"+str(starter_row+height)+"*"+str(topx)+", C"+str(starter_row+height)+"*COUNTA("+b_range+"))"
-        print(sec_formula)
-        current_sheet['C'+str(starter_row+height+1)] = sec_formula
-#-----------------------------------------------
+    
+    current_sheet['B'+str(starter_row+height+1)] = main_formula
+    current_sheet['C'+str(starter_row+height+1)] = sec_formula
+
+
+#---------------------------------------------------------------------------
 
 
 
@@ -127,9 +115,10 @@ dest_filename = input("Input the spreadsheet's name: ")
 
 wb = Workbook()
 ws1 = wb.active
-sheet_list = [ws1]
-sheet_row_index_list = [1]
-sheet_percent_index_list = [[]]
+sheet_list.append(ws1)
+sheet_names.append(ws1.title)
+sheet_row_index_list.append(1)
+sheet_percent_index_list.append([])
 
 current_sheet = ws1
 current_index = 0
@@ -140,7 +129,7 @@ while (option_select != '0'):
     print("-------------------------------------------------------------")
     print("Worksheet name: "+dest_filename)
     print("Current sheet: "+current_sheet.title)
-    print("Sheets: "+str(wb.sheetnames))
+    print("Sheets: "+", ".join(sheet_names))
     print("-------------------------------------------------------------")
     print("1. Change worksheet name")
     print("2. Change sheet name")
@@ -160,14 +149,14 @@ while (option_select != '0'):
         
     if (option_select == '2'):
         current_sheet.title = input("Input new sheet name: ")
+        sheet_names[current_index] = current_sheet.title
         
         
     if (option_select == '3'):
         temp = input("Input sheet to change to: ")
-        # if ((next(Worksheet for Worksheet in sheet_list if Worksheet.title == temp,"-1"))!="-1"):
-        if (temp in wb.sheetnames):
-            current_sheet = sheet_list[wb.sheetnames.index(temp)]
-            current_index = wb.sheetnames.index(temp)
+        if (temp in sheet_names):
+            current_sheet = sheet_list[sheet_names.index(temp)]
+            current_index = sheet_names.index(temp)
             print("Changed sheet to "+temp)
         else:
             print("Unable to find sheet in current sheet list")
@@ -176,11 +165,12 @@ while (option_select != '0'):
     if (option_select == '4'):
         temp = input("Input new sheet's name: ")
         sheet_list.append(wb.create_sheet(temp))
+        sheet_names.append(sheet_list[-1].title)
         sheet_percent_index_list.append([])
         sheet_row_index_list.append(1)
         print("Created sheet '"+temp+"', changing to new sheet...")
-        current_sheet = sheet_list[wb.sheetnames.index(temp)]
-        current_index = wb.sheetnames.index(temp)
+        current_sheet = sheet_list[sheet_names.index(temp)]
+        current_index = sheet_names.index(temp)
         
         
     if (option_select == '5'):
@@ -257,6 +247,7 @@ while (option_select != '0'):
     if (option_select == '9'):
         for sheet in sheet_list:
             current_sheet = sheet
+            current_index = sheet_list.index(current_sheet)
             sheet.column_dimensions['A'].width = 37
             sheet.column_dimensions['B'].width = 60
             sheet.column_dimensions['C'].width = 19
@@ -278,7 +269,7 @@ while (option_select != '0'):
             sheet["E11"] = im_sorry
             sheet["E11"].font = ex_font
             sheet["E11"].alignment = Alignment(horizontal='left')
-            sheet["F11"] = im_sorry_2
+            sheet["F11"] = im_sorry.replace("E2", "E5")
             sheet["F11"].font = ex_font
             sheet["F11"].alignment = Alignment(horizontal='left')
             
@@ -298,15 +289,14 @@ while (option_select != '0'):
             sheet["F2"] = course_str
         
         cGPA = wb.create_sheet("cGPA")
+        current_index = sheet_list.index(current_sheet)
         temp_s = current_sheet
         current_sheet = cGPA
         cGPA.column_dimensions['D'].width = 21
         title_cell("D4", "Current Mark")
         title_cell("D7", "cGPA")
         title_cell("D10", "Desired cGPA")
-        cGPA["D5"].style percent_style
-        cGPA["D5"].font = ex_font
-        cGPA["D5"].alignment = Alignment(horizontal='left')
+        cGPA["D5"].style = percent_style
         cGPA["D8"].font = ex_font
         cGPA["D8"].alignment = Alignment(horizontal='left')
         cGPA["D11"].font = ex_font
@@ -323,3 +313,4 @@ while (option_select != '0'):
             
         wb.save(dest_filename+".xlsx")
         print("Saved!")
+        current_sheet = temp_s
