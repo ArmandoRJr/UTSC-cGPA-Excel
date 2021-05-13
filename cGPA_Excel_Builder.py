@@ -1,4 +1,5 @@
 from typing import List
+from typing import TextIO
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Alignment, Protection, Font
 
@@ -6,7 +7,13 @@ from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Alignment, Pr
 sheet_list = []
 sheet_names = []
 sheet_row_index_list = []
+sheet_titles_list = []
+sheet_subtitles_list = []
+sheet_heights_list = []
 sheet_percent_index_list = []
+sheet_percents_list = []
+sheet_types_list = []
+sheet_topx_list = []
 
 thin_border = Border(left=Side(style='thin'),
                     right=Side(style='thin'),
@@ -60,6 +67,8 @@ def enter_section(starter_row: int, height: int,
                   percentages: List[float], add_type: int,
                   topx: int) -> None:
                   
+   
+    
     title_cell('A'+str(starter_row), title)
     current_sheet['B'+str(starter_row)].font = subtitle_font
     current_sheet['B'+str(starter_row)].alignment = Alignment(horizontal='center')
@@ -105,6 +114,18 @@ def enter_section(starter_row: int, height: int,
     
     current_sheet['B'+str(starter_row+height+1)] = main_formula
     current_sheet['C'+str(starter_row+height+1)] = sec_formula
+    
+    set_borders(starter_row, height)
+    
+    sheet_row_index_list[current_index] += (height+3)
+    sheet_titles_list[current_index].append(title)
+    sheet_subtitles_list[current_index].append(subtitles)
+    sheet_heights_list[current_index].append(height)
+    sheet_percent_index_list[current_index].append(sheet_row_index_list[current_index]-2)
+    sheet_percents_list[current_index].append(percentages)
+    sheet_types_list[current_index].append(add_type)
+    sheet_topx_list[current_index].append(topx)
+    
 
 
 #---------------------------------------------------------------------------
@@ -118,7 +139,13 @@ ws1 = wb.active
 sheet_list.append(ws1)
 sheet_names.append(ws1.title)
 sheet_row_index_list.append(1)
+sheet_titles_list.append([])
+sheet_subtitles_list.append([])
+sheet_heights_list.append([])
 sheet_percent_index_list.append([])
+sheet_percents_list.append([])
+sheet_types_list.append([])
+sheet_topx_list.append([])
 
 current_sheet = ws1
 current_index = 0
@@ -140,6 +167,9 @@ while (option_select != '0'):
     print("7. Enter section with same entries, repeated % [top x of y]")
     print("8. Enter section with big boye/lone entry")
     print("9. Save worksheet")
+    print("10. Save current workplace")
+    print("11. Open workplace settings")
+    print("12. Delete entry in current sheet")
     print("0. Exit")
     option_select = input("Input an option: ")
     
@@ -166,8 +196,14 @@ while (option_select != '0'):
         temp = input("Input new sheet's name: ")
         sheet_list.append(wb.create_sheet(temp))
         sheet_names.append(sheet_list[-1].title)
-        sheet_percent_index_list.append([])
         sheet_row_index_list.append(1)
+        sheet_titles_list.append([])
+        sheet_subtitles_list.append([])
+        sheet_heights_list.append([])
+        sheet_percent_index_list.append([])
+        sheet_percents_list.append([])
+        sheet_types_list.append([])
+        sheet_topx_list.append([])
         print("Created sheet '"+temp+"', changing to new sheet...")
         current_sheet = sheet_list[sheet_names.index(temp)]
         current_index = sheet_names.index(temp)
@@ -189,9 +225,7 @@ while (option_select != '0'):
         
         enter_section(sheet_row_index_list[current_index], number, 
                       title, sub_list, percent,2,0)
-        set_borders(sheet_row_index_list[current_index], number)
-        sheet_row_index_list[current_index] += (number+3)
-        sheet_percent_index_list[current_index].append(sheet_row_index_list[current_index]-2)
+        
         
         
     if (option_select == '6'):
@@ -207,9 +241,6 @@ while (option_select != '0'):
         
         enter_section(sheet_row_index_list[current_index], number, 
                       title, sub_list, percent,3,0)
-        set_borders(sheet_row_index_list[current_index], number)
-        sheet_row_index_list[current_index] += (number+3)
-        sheet_percent_index_list[current_index].append(sheet_row_index_list[current_index]-2)
         
         
     if (option_select == '7'):
@@ -229,9 +260,6 @@ while (option_select != '0'):
         
         enter_section(sheet_row_index_list[current_index], number, 
                       title, sub_list, percent,4,topx)
-        set_borders(sheet_row_index_list[current_index], number)
-        sheet_row_index_list[current_index] += (number+3)
-        sheet_percent_index_list[current_index].append(sheet_row_index_list[current_index]-2)
         
     if (option_select == '8'):
         title = input("Input title of entry: ")
@@ -239,9 +267,6 @@ while (option_select != '0'):
         worth = float(input("Input worth in % (decimals allowed): "))
         enter_section(sheet_row_index_list[current_index], 1, title,
                      [subtitle], [worth*0.01],1,0)
-        set_borders(sheet_row_index_list[current_index], 1)
-        sheet_row_index_list[current_index] += 4
-        sheet_percent_index_list[current_index].append(sheet_row_index_list[current_index]-2)
         
         
     if (option_select == '9'):
@@ -313,4 +338,112 @@ while (option_select != '0'):
             
         wb.save(dest_filename+".xlsx")
         print("Saved!")
+        wb.remove(cGPA)
         current_sheet = temp_s
+        
+        
+    if (option_select == '10'):
+        filename = input("Select name for saving settings (no extension): ")
+        file = open(filename+".txt", 'w')
+        file.write(dest_filename+'\n')
+        file.write(str(len(sheet_names))+'\n\n\n')
+        
+        for i in range(0, len(sheet_names)):
+            file.write(sheet_names[i]+'\n')
+            file.write(str(len(sheet_titles_list[i]))+'\n')
+            for x in range(0, len(sheet_titles_list[i])):
+                file.write(sheet_titles_list[i][x]+'\n')
+                file.write(str(len(sheet_subtitles_list[i][x]))+'\n')
+                for a in range(0, len(sheet_subtitles_list[i][x])):
+                    file.write(sheet_subtitles_list[i][x][a]+'\n')
+                    file.write(str(sheet_percents_list[i][x][a])+'\n')
+                file.write(str(sheet_heights_list[i][x])+'\n')
+                file.write(str(sheet_types_list[i][x])+'\n')
+                file.write(str(sheet_topx_list[i][x])+'\n')
+            file.write('\n')
+        
+        file.close()
+    
+    
+    if (option_select == '11'):
+        filename = input("Input filename (extension included): ")
+        file = open(filename, 'r')
+        
+        for sheet in sheet_list:
+            wb.remove(sheet)
+        
+        sheet_list = []
+        sheet_names = []
+        sheet_row_index_list = []
+        sheet_titles_list = []
+        sheet_subtitles_list = []
+        sheet_heights_list = []
+        sheet_percent_index_list = []
+        sheet_percents_list = []
+        sheet_types_list = []
+        sheet_topx_list = []
+        
+        
+        dest_filename = file.readline()[:-1]
+        sheet_no = int(file.readline())
+        file.readline()
+        file.readline()
+        for i in range(0, sheet_no):
+            
+            
+            sheet_list.append(wb.create_sheet(file.readline()[:-1]))
+            current_index = i
+            sheet_names.append(sheet_list[-1].title)
+            current_sheet = sheet_list[i]
+            sheet_row_index_list.append(1)
+            sheet_titles_list.append([])
+            sheet_subtitles_list.append([])
+            sheet_heights_list.append([])
+            sheet_percent_index_list.append([])
+            sheet_percents_list.append([])
+            sheet_types_list.append([])
+            sheet_topx_list.append([])
+            
+            for x in range(0, int(file.readline())):
+                title = file.readline()[:-1]
+                subtitles = []
+                percentages = []
+                for a in range(0, int(file.readline())):
+                    subtitles.append(file.readline()[:-1])
+                    percentages.append(float(file.readline()))
+                height = int(file.readline())
+                add_type = int(file.readline())
+                topx = int(file.readline())
+                enter_section(sheet_row_index_list[current_index],
+                              height, title, subtitles, percentages, add_type,topx)
+            file.readline()
+            
+    
+    if (option_select == '12'):
+        if (len(sheet_titles_list[current_index]) == 0):
+            print ("There are no entries to delete.")
+        else:
+            print("Titles: "+", ".join(sheet_titles_list[current_index]))
+            delete = input("Input the title of the entry to delete: ")
+            if (delete in sheet_titles_list[current_index]):
+                del_index = sheet_titles_list[current_index].index(delete)
+                print(sheet_percent_index_list[current_index])
+                current_sheet.delete_rows(sheet_percent_index_list[current_index][del_index]-
+                                          sheet_heights_list[current_index][del_index]-1,
+                                          sheet_percent_index_list[current_index][del_index]+1)
+                sheet_row_index_list[current_index] -= (sheet_heights_list[current_index][del_index]+3)
+                sheet_subtitles_list[current_index].pop(del_index)
+                for i in range(del_index, len(sheet_percent_index_list[current_index])):
+                    sheet_percent_index_list[current_index][i] -= sheet_heights_list[current_index][del_index]+3
+                sheet_percent_index_list[current_index].pop(del_index)
+                print(sheet_percent_index_list[current_index])
+                sheet_heights_list[current_index].pop(del_index)
+                sheet_types_list[current_index].pop(del_index)
+                sheet_topx_list[current_index].pop(del_index)
+                print("Deleting "+delete+"...")
+                sheet_titles_list[current_index].pop(del_index)
+                
+            else:
+                print("Title entry not found.")
+            
+        
