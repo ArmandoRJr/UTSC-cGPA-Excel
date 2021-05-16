@@ -4,17 +4,6 @@ from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Alignment, Protection, Font
 
 #---------------------------CONSTANTS--------------------------------------
-sheet_list = []
-sheet_names = []
-sheet_row_index_list = []
-sheet_titles_list = []
-sheet_subtitles_list = []
-sheet_heights_list = []
-sheet_percent_index_list = []
-sheet_percents_list = []
-sheet_types_list = []
-sheet_topx_list = []
-
 thin_border = Border(left=Side(style='thin'),
                     right=Side(style='thin'),
                     top=Side(style='thin'),
@@ -44,6 +33,17 @@ IF(AND(E2*100<=56.99,E2*100>=53),1,
 IF(AND(E2*100<=52.99,E2*100>=50),0.7,0))))))))))))""".replace('\n','')
 
 #---------------------------------------------------------------------------
+sheet_list = []
+sheet_names = []
+sheet_row_index_list = []
+sheet_titles_list = []
+sheet_subtitles_list = []
+sheet_heights_list = []
+sheet_percent_index_list = []
+sheet_percents_list = []
+sheet_types_list = []
+sheet_topx_list = []
+
 
 
 #----------------------------------HELPERS----------------------------------
@@ -170,6 +170,7 @@ while (option_select != '0'):
     print("10. Save current workplace")
     print("11. Open workplace settings")
     print("12. Delete entry in current sheet")
+    print("13. Delete sheet")
     print("0. Exit")
     option_select = input("Input an option: ")
     
@@ -270,76 +271,89 @@ while (option_select != '0'):
         
         
     if (option_select == '9'):
-        for sheet in sheet_list:
-            current_sheet = sheet
+        check = 1
+        for title_list in sheet_titles_list:
+            if (len(title_list) == 0):
+                check = 0
+                print("Unable to save, sheet '"+sheet_names[sheet_titles_list.index(title_list)]+
+                      "' needs at least one entry.")
+                break
+                
+        if (check == 1):
+            for sheet in sheet_list:
+                sheet.delete_cols(5,2)
+                current_sheet = sheet
+                current_index = sheet_list.index(current_sheet)
+                sheet.column_dimensions['A'].width = 37
+                sheet.column_dimensions['B'].width = 60
+                sheet.column_dimensions['C'].width = 19
+                sheet.column_dimensions['E'].width = 40
+                sheet.column_dimensions['F'].width = 22
+                title_cell("E1", "Current Mark")
+                title_cell("F1", "Course Completion")
+                title_cell("E4", "Mark Needed")
+                title_cell("E7", "Remaining Mark Avg. to Achieve")
+                title_cell("E10", "GPA")
+                title_cell("F10", "Desired GPA")
+                title_cell("E14", "Mark Override")
+                sheet["E2"].style = percent_style
+                sheet["F2"].style = percent_style
+                sheet["E5"].style = percent_style
+                sheet["E8"].style = percent_style
+                sheet["E15"].style = percent_style
+                sheet["E8"] = "=(E5-(E2*F2))/(1-F2)"
+                sheet["E11"] = im_sorry
+                sheet["E11"].font = ex_font
+                sheet["E11"].alignment = Alignment(horizontal='left')
+                sheet["F11"] = im_sorry.replace("E2", "E5")
+                sheet["F11"].font = ex_font
+                sheet["F11"].alignment = Alignment(horizontal='left')
+                
+                mark_str = "=IF(ISBLANK(E15), (SUM("
+                for i in sheet_percent_index_list[current_index]:
+                    mark_str += "(B"+str(i)+"*C"+str(i)+"),"
+                mark_str = mark_str[:-1]
+                mark_str += ")/SUM("
+                for i in sheet_percent_index_list[current_index]:
+                    mark_str += "C"+str(i)+","
+                mark_str = mark_str[:-1]
+                mark_str += ")), E15)"
+                sheet["E2"] = mark_str
+                
+                course_str = "=SUM("
+                for i in sheet_percent_index_list[current_index]:
+                    course_str += "C"+str(i)+","
+                course_str = course_str[:-1]
+                course_str += ")"
+                sheet["F2"] = course_str
+            
+            cGPA = wb.create_sheet("cGPA")
             current_index = sheet_list.index(current_sheet)
-            sheet.column_dimensions['A'].width = 37
-            sheet.column_dimensions['B'].width = 60
-            sheet.column_dimensions['C'].width = 19
-            sheet.column_dimensions['E'].width = 40
-            sheet.column_dimensions['F'].width = 22
-            title_cell("E1", "Current Mark")
-            title_cell("F1", "Course Completion")
-            title_cell("E4", "Mark Needed")
-            title_cell("E7", "Remaining Mark Avg. to Achieve")
-            title_cell("E10", "GPA")
-            title_cell("F10", "Desired GPA")
-            title_cell("E14", "Mark Override")
-            sheet["E2"].style = percent_style
-            sheet["F2"].style = percent_style
-            sheet["E5"].style = percent_style
-            sheet["E8"].style = percent_style
-            sheet["E15"].style = percent_style
-            sheet["E8"] = "=(E5-(E2*F2))/(1-F2)"
-            sheet["E11"] = im_sorry
-            sheet["E11"].font = ex_font
-            sheet["E11"].alignment = Alignment(horizontal='left')
-            sheet["F11"] = im_sorry.replace("E2", "E5")
-            sheet["F11"].font = ex_font
-            sheet["F11"].alignment = Alignment(horizontal='left')
+            temp_s = current_sheet
+            current_sheet = cGPA
+            cGPA.column_dimensions['D'].width = 21
+            title_cell("D4", "Current Mark")
+            title_cell("D7", "cGPA")
+            title_cell("D10", "Desired cGPA")
+            cGPA["D5"].style = percent_style
+            cGPA["D8"].font = ex_font
+            cGPA["D8"].alignment = Alignment(horizontal='left')
+            cGPA["D11"].font = ex_font
+            cGPA["D11"].alignment = Alignment(horizontal='left')
             
-            mark_str = "=IF(ISBLANK(E15), (SUM("
-            for i in sheet_percent_index_list[current_index]:
-                mark_str += "(B"+str(i)+"*C"+str(i)+"),"
-            mark_str += ")/SUM("
-            for i in sheet_percent_index_list[current_index]:
-                mark_str += "C"+str(i)+","
-            mark_str += ")), E15)"
-            sheet["E2"] = mark_str
+            cGPA_current = "=SUM("
+            for sheet in sheet_list:
+                cGPA_current += sheet.title+"!E2,"
+            cGPA_current += ")/"+str(len(sheet_list))
             
-            course_str = "=SUM("
-            for i in sheet_percent_index_list[current_index]:
-                course_str += "C"+str(i)+","
-            course_str += ")"
-            sheet["F2"] = course_str
-        
-        cGPA = wb.create_sheet("cGPA")
-        current_index = sheet_list.index(current_sheet)
-        temp_s = current_sheet
-        current_sheet = cGPA
-        cGPA.column_dimensions['D'].width = 21
-        title_cell("D4", "Current Mark")
-        title_cell("D7", "cGPA")
-        title_cell("D10", "Desired cGPA")
-        cGPA["D5"].style = percent_style
-        cGPA["D8"].font = ex_font
-        cGPA["D8"].alignment = Alignment(horizontal='left')
-        cGPA["D11"].font = ex_font
-        cGPA["D11"].alignment = Alignment(horizontal='left')
-        
-        cGPA_current = "=SUM("
-        for sheet in sheet_list:
-            cGPA_current += sheet.title+"!E2,"
-        cGPA_current += ")/"+str(len(sheet_list))
-        
-        cGPA["D5"] = cGPA_current
-        cGPA["D8"] = cGPA_current.replace("!E2,", "!E11,")
-        cGPA["D11"] = cGPA_current.replace("!E2,", "!F11,")
-            
-        wb.save(dest_filename+".xlsx")
-        print("Saved!")
-        wb.remove(cGPA)
-        current_sheet = temp_s
+            cGPA["D5"] = cGPA_current
+            cGPA["D8"] = cGPA_current.replace("!E2,", "!E11,")
+            cGPA["D11"] = cGPA_current.replace("!E2,", "!F11,")
+                
+            wb.save(dest_filename+".xlsx")
+            print("Saved!")
+            wb.remove(cGPA)
+            current_sheet = temp_s
         
         
     if (option_select == '10'):
@@ -445,5 +459,28 @@ while (option_select != '0'):
                 
             else:
                 print("Title entry not found.")
+                
+    if (option_select == '13'):
+        if (len(sheet_names) == 1):
+            print("Can't delete any sheets when only one available.")
+        else:
+            print("Sheets: "+", ".join(sheet_names))
+            sheet_delete = input("Input sheet to delete: ")
+            if (sheet_delete in sheet_names):
+                delete_index = sheet_names.index(sheet_delete)
+                sheet_titles_list.pop(delete_index)
+                sheet_row_index_list.pop(delete_index)
+                sheet_subtitles_list.pop(delete_index)
+                sheet_percent_index_list.pop(delete_index)
+                sheet_heights_list.pop(delete_index)
+                sheet_types_list.pop(delete_index)
+                sheet_topx_list.pop(delete_index)
+                print("Deleting "+sheet_delete+"...")
+                sheet_names.pop(delete_index)
+                wb.remove(sheet_list[current_index])
+                current_sheet = sheet_list[0]
+                current_index = 0
+            else:
+                print("Sheet not found.")
             
         
