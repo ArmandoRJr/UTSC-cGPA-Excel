@@ -158,42 +158,32 @@ while (option_select != '0'):
     print("Current sheet: "+current_sheet.title)
     print("Sheets: "+", ".join(sheet_names))
     print("-------------------------------------------------------------")
+    print("*********************SPREADSHEET OPTIONS*********************")
     print("1. Change worksheet name")
-    print("2. Change sheet name")
-    print("3. Change current sheet")
-    print("4. Add new sheet")
-    print("5. Enter section with same entries, repeated %")
-    print("6. Enter section with same entries, different %")
-    print("7. Enter section with same entries, repeated % [top x of y]")
-    print("8. Enter section with big boye/lone entry")
-    print("9. Save worksheet")
-    print("10. Save current workplace")
-    print("11. Open workplace settings")
-    print("12. Delete entry in current sheet")
-    print("13. Delete sheet")
+    print("2. Add new sheet")
+    print("3. Delete sheet")
+    print("4. Save worksheet")
+    print("********************CURRENT SHEET OPTIONS********************")
+    print("5. Change sheet name")
+    print("6. Change current sheet")
+    print("7. Delete entry in current sheet")
+    print("*********************SHEET ENTRY OPTIONS*********************")
+    print("8. Enter section with same entries, repeated %")
+    print("9. Enter section with same entries, different %")
+    print("10. Enter section with same entries, repeated % [top x of y]")
+    print("11. Enter section with big boye/lone entry")
+    print("*********************WORKPLACE SETTINGS**********************")
+    print("12. Save current workplace")
+    print("13. Open workplace settings")
+	
     print("0. Exit")
     option_select = input("Input an option: ")
     
     if (option_select == '1'):
         dest_filename = input("Input new worksheet name: ")
         
-        
+    
     if (option_select == '2'):
-        current_sheet.title = input("Input new sheet name: ")
-        sheet_names[current_index] = current_sheet.title
-        
-        
-    if (option_select == '3'):
-        temp = input("Input sheet to change to: ")
-        if (temp in sheet_names):
-            current_sheet = sheet_list[sheet_names.index(temp)]
-            current_index = sheet_names.index(temp)
-            print("Changed sheet to "+temp)
-        else:
-            print("Unable to find sheet in current sheet list")
-            
-            
-    if (option_select == '4'):
         temp = input("Input new sheet's name: ")
         sheet_list.append(wb.create_sheet(temp))
         sheet_names.append(sheet_list[-1].title)
@@ -210,67 +200,31 @@ while (option_select != '0'):
         current_index = sheet_names.index(temp)
         
         
-    if (option_select == '5'):
-        title = input("Input title of entry: ")
-        subtitle = input("Input subtitles of entry: ")
-        number = int(input("Input number of subtitles: "))
-        worth = float(input("Input worth in % (decimals allowed): "))
-        
-        sub_list = []
-        for i in range(0, number):
-            sub_list.append(subtitle+" "+str(i+1))
-        
-        percent = []
-        for i in range(0, number):
-            percent.append((worth/number)*0.01)
-        
-        enter_section(sheet_row_index_list[current_index], number, 
-                      title, sub_list, percent,2,0)
-        
-        
-        
-    if (option_select == '6'):
-        title = input("Input title of entry: ")
-        subtitle = input("Input subtitles of entry: ")
-        number = int(input("Input number of subtitles: "))
-        
-        sub_list = []
-        percent = []
-        for i in range(0, number):
-            sub_list.append(subtitle+" "+str(i+1))
-            percent.append(float(input("Input worth in % for "+subtitle+" "+str(i+1)+": "))*0.01)
-        
-        enter_section(sheet_row_index_list[current_index], number, 
-                      title, sub_list, percent,3,0)
-        
-        
-    if (option_select == '7'):
-        title = input("Input title of entry: ")
-        subtitle = input("Input subtitles of entry: ")
-        number = int(input("Input number of subtitles: "))
-        worth = float(input("Input worth in % (decimals allowed): "))
-        topx = int(input("Input top x of "+str(number)+" to take into account: "))
-        
-        sub_list = []
-        for i in range(0, number):
-            sub_list.append(subtitle+" "+str(i+1))
-        
-        percent = []
-        for i in range(0, number):
-            percent.append((worth/topx)*0.01)
-        
-        enter_section(sheet_row_index_list[current_index], number, 
-                      title, sub_list, percent,4,topx)
-        
-    if (option_select == '8'):
-        title = input("Input title of entry: ")
-        subtitle = input("Input subtitle of entry: ")
-        worth = float(input("Input worth in % (decimals allowed): "))
-        enter_section(sheet_row_index_list[current_index], 1, title,
-                     [subtitle], [worth*0.01],1,0)
-        
-        
-    if (option_select == '9'):
+    if (option_select == '3'):
+        if (len(sheet_names) == 1):
+            print("Can't delete any sheets when only one available.")
+        else:
+            print("Sheets: "+", ".join(sheet_names))
+            sheet_delete = input("Input sheet to delete: ")
+            if (sheet_delete in sheet_names):
+                delete_index = sheet_names.index(sheet_delete)
+                sheet_titles_list.pop(delete_index)
+                sheet_row_index_list.pop(delete_index)
+                sheet_subtitles_list.pop(delete_index)
+                sheet_percent_index_list.pop(delete_index)
+                sheet_heights_list.pop(delete_index)
+                sheet_types_list.pop(delete_index)
+                sheet_topx_list.pop(delete_index)
+                print("Deleting "+sheet_delete+"...")
+                sheet_names.pop(delete_index)
+                wb.remove(sheet_list[current_index])
+                current_sheet = sheet_list[0]
+                current_index = 0
+            else:
+                print("Sheet not found.")
+
+
+    if (option_select == '4'):
         check = 1
         for title_list in sheet_titles_list:
             if (len(title_list) == 0):
@@ -353,10 +307,112 @@ while (option_select != '0'):
             wb.save(dest_filename+".xlsx")
             print("Saved!")
             wb.remove(cGPA)
-            current_sheet = temp_s
+            current_sheet = temp_s                
+                
+                
+    if (option_select == '5'):
+        current_sheet.title = input("Input new sheet name: ")
+        sheet_names[current_index] = current_sheet.title
+        
+        
+    if (option_select == '6'):
+        temp = input("Input sheet to change to: ")
+        if (temp in sheet_names):
+            current_sheet = sheet_list[sheet_names.index(temp)]
+            current_index = sheet_names.index(temp)
+            print("Changed sheet to "+temp)
+        else:
+            print("Unable to find sheet in current sheet list")
+            
+            
+    if (option_select == '7'):
+        if (len(sheet_titles_list[current_index]) == 0):
+            print ("There are no entries to delete.")
+        else:
+            print("Titles: "+", ".join(sheet_titles_list[current_index]))
+            delete = input("Input the title of the entry to delete: ")
+            if (delete in sheet_titles_list[current_index]):
+                del_index = sheet_titles_list[current_index].index(delete)
+                print(sheet_percent_index_list[current_index])
+                current_sheet.delete_rows(sheet_percent_index_list[current_index][del_index]-
+                                          sheet_heights_list[current_index][del_index]-1,
+                                          sheet_percent_index_list[current_index][del_index]+1)
+                sheet_row_index_list[current_index] -= (sheet_heights_list[current_index][del_index]+3)
+                sheet_subtitles_list[current_index].pop(del_index)
+                for i in range(del_index, len(sheet_percent_index_list[current_index])):
+                    sheet_percent_index_list[current_index][i] -= sheet_heights_list[current_index][del_index]+3
+                sheet_percent_index_list[current_index].pop(del_index)
+                print(sheet_percent_index_list[current_index])
+                sheet_heights_list[current_index].pop(del_index)
+                sheet_types_list[current_index].pop(del_index)
+                sheet_topx_list[current_index].pop(del_index)
+                print("Deleting "+delete+"...")
+                sheet_titles_list[current_index].pop(del_index)
+            else:
+                print("Title entry not found.")
+        
+        
+    if (option_select == '8'):
+        title = input("Input title of entry: ")
+        subtitle = input("Input subtitles of entry: ")
+        number = int(input("Input number of subtitles: "))
+        worth = float(input("Input worth in % (decimals allowed): "))
+        
+        sub_list = []
+        for i in range(0, number):
+            sub_list.append(subtitle+" "+str(i+1))
+        
+        percent = []
+        for i in range(0, number):
+            percent.append((worth/number)*0.01)
+        
+        enter_section(sheet_row_index_list[current_index], number, 
+                      title, sub_list, percent,2,0)
+        
+        
+    if (option_select == '9'):
+        title = input("Input title of entry: ")
+        subtitle = input("Input subtitles of entry: ")
+        number = int(input("Input number of subtitles: "))
+        
+        sub_list = []
+        percent = []
+        for i in range(0, number):
+            sub_list.append(subtitle+" "+str(i+1))
+            percent.append(float(input("Input worth in % for "+subtitle+" "+str(i+1)+": "))*0.01)
+        
+        enter_section(sheet_row_index_list[current_index], number, 
+                      title, sub_list, percent,3,0)
         
         
     if (option_select == '10'):
+        title = input("Input title of entry: ")
+        subtitle = input("Input subtitles of entry: ")
+        number = int(input("Input number of subtitles: "))
+        worth = float(input("Input worth in % (decimals allowed): "))
+        topx = int(input("Input top x of "+str(number)+" to take into account: "))
+        
+        sub_list = []
+        for i in range(0, number):
+            sub_list.append(subtitle+" "+str(i+1))
+        
+        percent = []
+        for i in range(0, number):
+            percent.append((worth/topx)*0.01)
+        
+        enter_section(sheet_row_index_list[current_index], number, 
+                      title, sub_list, percent,4,topx)
+   
+   
+    if (option_select == '11'):
+        title = input("Input title of entry: ")
+        subtitle = input("Input subtitle of entry: ")
+        worth = float(input("Input worth in % (decimals allowed): "))
+        enter_section(sheet_row_index_list[current_index], 1, title,
+                     [subtitle], [worth*0.01],1,0)
+    
+
+    if (option_select == '12'):
         filename = input("Select name for saving settings (no extension): ")
         file = open(filename+".txt", 'w')
         file.write(dest_filename+'\n')
@@ -379,7 +435,7 @@ while (option_select != '0'):
         file.close()
     
     
-    if (option_select == '11'):
+    if (option_select == '13'):
         filename = input("Input filename (extension included): ")
         file = open(filename, 'r')
         
@@ -433,54 +489,8 @@ while (option_select != '0'):
             file.readline()
             
     
-    if (option_select == '12'):
-        if (len(sheet_titles_list[current_index]) == 0):
-            print ("There are no entries to delete.")
-        else:
-            print("Titles: "+", ".join(sheet_titles_list[current_index]))
-            delete = input("Input the title of the entry to delete: ")
-            if (delete in sheet_titles_list[current_index]):
-                del_index = sheet_titles_list[current_index].index(delete)
-                print(sheet_percent_index_list[current_index])
-                current_sheet.delete_rows(sheet_percent_index_list[current_index][del_index]-
-                                          sheet_heights_list[current_index][del_index]-1,
-                                          sheet_percent_index_list[current_index][del_index]+1)
-                sheet_row_index_list[current_index] -= (sheet_heights_list[current_index][del_index]+3)
-                sheet_subtitles_list[current_index].pop(del_index)
-                for i in range(del_index, len(sheet_percent_index_list[current_index])):
-                    sheet_percent_index_list[current_index][i] -= sheet_heights_list[current_index][del_index]+3
-                sheet_percent_index_list[current_index].pop(del_index)
-                print(sheet_percent_index_list[current_index])
-                sheet_heights_list[current_index].pop(del_index)
-                sheet_types_list[current_index].pop(del_index)
-                sheet_topx_list[current_index].pop(del_index)
-                print("Deleting "+delete+"...")
-                sheet_titles_list[current_index].pop(del_index)
+
                 
-            else:
-                print("Title entry not found.")
-                
-    if (option_select == '13'):
-        if (len(sheet_names) == 1):
-            print("Can't delete any sheets when only one available.")
-        else:
-            print("Sheets: "+", ".join(sheet_names))
-            sheet_delete = input("Input sheet to delete: ")
-            if (sheet_delete in sheet_names):
-                delete_index = sheet_names.index(sheet_delete)
-                sheet_titles_list.pop(delete_index)
-                sheet_row_index_list.pop(delete_index)
-                sheet_subtitles_list.pop(delete_index)
-                sheet_percent_index_list.pop(delete_index)
-                sheet_heights_list.pop(delete_index)
-                sheet_types_list.pop(delete_index)
-                sheet_topx_list.pop(delete_index)
-                print("Deleting "+sheet_delete+"...")
-                sheet_names.pop(delete_index)
-                wb.remove(sheet_list[current_index])
-                current_sheet = sheet_list[0]
-                current_index = 0
-            else:
-                print("Sheet not found.")
+    
             
         
