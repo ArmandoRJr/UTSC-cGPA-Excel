@@ -1,3 +1,4 @@
 *.txt
 *.xlsx
+*.json
 cGPA_Excel_Builder_test.py

@@ -1,5 +1,6 @@
 # UTSC cGPA Excel Builder
 A quick script for building somewhat decent cGPA spreadsheets. \
+[*Requires OpenPyXl!*](https://pypi.org/project/openpyxl/)
 (And yes, the code is disgusting as of right now. I'm fixing it.)
 
 

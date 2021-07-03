@@ -1,20 +1,20 @@
 from typing import List
-from typing import TextIO
 from openpyxl import Workbook
-from openpyxl.styles import NamedStyle, PatternFill, Border, Side, Alignment, Protection, Font
+from openpyxl.styles import NamedStyle, Border, Side, Alignment, Font
 
-#---------------------------CONSTANTS--------------------------------------
+
+# ---------------------------CONSTANTS--------------------------------------
 thin_border = Border(left=Side(style='thin'),
-                    right=Side(style='thin'),
-                    top=Side(style='thin'),
-                    bottom=Side(style='thin'))
-                    
+                     right=Side(style='thin'),
+                     top=Side(style='thin'),
+                     bottom=Side(style='thin'))
+
 title_font = Font(name='Calibri', size=14, bold=True)
 subtitle_font = Font(name='Calibri', size=14)
 ex_font = Font(name='Calibri', size=12)
 total_sf_font = Font(name='Calibri', size=12, italic=True)
 
-percent_style =  NamedStyle(name="percent_style")
+percent_style = NamedStyle(name="percent_style")
 percent_style.font = ex_font
 percent_style.alignment = Alignment(horizontal='left')
 percent_style.number_format = '0.00%'
@@ -30,9 +30,10 @@ IF(AND(E2*100<=66.99,E2*100>=63),2,
 IF(AND(E2*100<=62.99,E2*100>=60),1.7,
 IF(AND(E2*100<=59.99,E2*100>=57),1.3,
 IF(AND(E2*100<=56.99,E2*100>=53),1,
-IF(AND(E2*100<=52.99,E2*100>=50),0.7,0))))))))))))""".replace('\n','')
+IF(AND(E2*100<=52.99,E2*100>=50),0.7,0))))))))))))""".replace('\n', '')
 
-#---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
 sheet_list = []
 sheet_names = []
 sheet_row_index_list = []
@@ -45,17 +46,16 @@ sheet_types_list = []
 sheet_topx_list = []
 
 
-
-#----------------------------------HELPERS----------------------------------
+# ----------------------------------HELPERS----------------------------------
 def set_borders(starter_row: int, height: int) -> None:
 
     for row in range(starter_row, starter_row+height+2):
-            for col in range(1, 4):
-                current_sheet.cell(column=col, row=row).border = thin_border
+        for col in range(1, 4):
+            current_sheet.cell(column=col, row=row).border = thin_border
 
 
-def title_cell(cell_ID: str, title: str) -> None:
-    cell = current_sheet[cell_ID]
+def title_cell(cell_id: str, title: str) -> None:
+    cell = current_sheet[cell_id]
     cell.font = title_font
     cell.border = thin_border
     cell.alignment = Alignment(horizontal='left')
@@ -66,16 +66,14 @@ def enter_section(starter_row: int, height: int,
                   title: str, subtitles: List[str],
                   percentages: List[float], add_type: int,
                   topx: int) -> None:
-                  
-   
-    
+
     title_cell('A'+str(starter_row), title)
     current_sheet['B'+str(starter_row)].font = subtitle_font
     current_sheet['B'+str(starter_row)].alignment = Alignment(horizontal='center')
     current_sheet['B'+str(starter_row)] = "Grade"
     current_sheet['C'+str(starter_row)].font = subtitle_font
-    current_sheet['C'+str(starter_row)] =  "% worth"
-    
+    current_sheet['C'+str(starter_row)] = "% worth"
+
     for i in range(0, height):
         current_sheet['A'+str(starter_row+i+1)].font = ex_font
         current_sheet['A'+str(starter_row+i+1)] = subtitles[i]
@@ -83,20 +81,19 @@ def enter_section(starter_row: int, height: int,
         current_sheet['B'+str(starter_row+i+1)].alignment = Alignment(horizontal='center')
         current_sheet['C'+str(starter_row+i+1)].style = percent_style
         current_sheet['C'+str(starter_row+i+1)] = percentages[i]
-    
+
     current_sheet['A'+str(starter_row+height+1)].font = total_sf_font
     current_sheet['A'+str(starter_row+height+1)] = "Total (so far)"
     current_sheet['B'+str(starter_row+height+1)].style = percent_style
     current_sheet['B'+str(starter_row+height+1)].alignment = Alignment(horizontal='center')
     current_sheet['C'+str(starter_row+height+1)].style = percent_style
-    
+
     if (add_type == 1):
         main_formula = "=IFERROR(SUM(B"+str(starter_row+height)+")/COUNTA(B"+str(starter_row+height)+"),0)"
         sec_formula = "=C"+str(starter_row+height)+"*COUNTA(B"+str(starter_row+height)+")"
-        
+
     if (add_type == 2):
         b_range = ("B"+str(starter_row+1)+":B"+str(starter_row+height))
-        c_range = ("C"+str(starter_row+1)+":C"+str(starter_row+height))
         main_formula = "=IFERROR(SUM("+b_range+")/COUNTA("+b_range+"),0)"
         sec_formula = "=C"+str(starter_row+height)+"*COUNTA("+b_range+")"
     if (add_type == 3):
@@ -106,17 +103,16 @@ def enter_section(starter_row: int, height: int,
         sec_formula = '=SUMIF('+b_range+', "<>", '+c_range+')'
     if (add_type == 4):
         b_range = ("B"+str(starter_row+1)+":B"+str(starter_row+height))
-        c_range = ("C"+str(starter_row+1)+":C"+str(starter_row+height))
         main_formula = "=MAX(IFERROR(SUM("+b_range+")/COUNTA("+b_range+"),0), IFERROR(AVERAGE(LARGE("+b_range+",{"
-        main_formula += ",".join(str(int) for int in list(range(1,topx+1)))
+        main_formula += ",".join(str(int) for int in list(range(1, topx+1)))
         main_formula += "})), IFERROR(SUM("+b_range+")/COUNTA("+b_range+"),0)))"
         sec_formula = "=MIN(C"+str(starter_row+height)+"*"+str(topx)+", C"+str(starter_row+height)+"*COUNTA("+b_range+"))"
-    
+
     current_sheet['B'+str(starter_row+height+1)] = main_formula
     current_sheet['C'+str(starter_row+height+1)] = sec_formula
-    
+
     set_borders(starter_row, height)
-    
+
     sheet_row_index_list[current_index] += (height+3)
     sheet_titles_list[current_index].append(title)
     sheet_subtitles_list[current_index].append(subtitles)
@@ -125,12 +121,9 @@ def enter_section(starter_row: int, height: int,
     sheet_percents_list[current_index].append(percentages)
     sheet_types_list[current_index].append(add_type)
     sheet_topx_list[current_index].append(topx)
-    
 
 
-#---------------------------------------------------------------------------
-
-
+# ---------------------------------------------------------------------------
 
 dest_filename = input("Input the spreadsheet's name: ")
 
@@ -149,7 +142,6 @@ sheet_topx_list.append([])
 
 current_sheet = ws1
 current_index = 0
- 
 option_select = -1
 
 while (option_select != '0'):
@@ -175,14 +167,12 @@ while (option_select != '0'):
     print("*********************WORKPLACE SETTINGS**********************")
     print("12. Save current workplace")
     print("13. Open workplace settings")
-	
     print("0. Exit")
     option_select = input("Input an option: ")
-    
+
     if (option_select == '1'):
         dest_filename = input("Input new worksheet name: ")
-        
-    
+
     if (option_select == '2'):
         temp = input("Input new sheet's name: ")
         sheet_list.append(wb.create_sheet(temp))
@@ -198,8 +188,7 @@ while (option_select != '0'):
         print("Created sheet '"+temp+"', changing to new sheet...")
         current_sheet = sheet_list[sheet_names.index(temp)]
         current_index = sheet_names.index(temp)
-        
-        
+
     if (option_select == '3'):
         if (len(sheet_names) == 1):
             print("Can't delete any sheets when only one available.")
@@ -223,19 +212,18 @@ while (option_select != '0'):
             else:
                 print("Sheet not found.")
 
-
     if (option_select == '4'):
         check = 1
         for title_list in sheet_titles_list:
             if (len(title_list) == 0):
                 check = 0
-                print("Unable to save, sheet '"+sheet_names[sheet_titles_list.index(title_list)]+
+                print("Unable to save, sheet '"+sheet_names[sheet_titles_list.index(title_list)] +
                       "' needs at least one entry.")
                 break
-                
+
         if (check == 1):
             for sheet in sheet_list:
-                sheet.delete_cols(5,2)
+                sheet.delete_cols(5, 2)
                 current_sheet = sheet
                 current_index = sheet_list.index(current_sheet)
                 sheet.column_dimensions['A'].width = 37
@@ -262,7 +250,7 @@ while (option_select != '0'):
                 sheet["F11"] = im_sorry.replace("E2", "E5")
                 sheet["F11"].font = ex_font
                 sheet["F11"].alignment = Alignment(horizontal='left')
-                
+
                 mark_str = "=IF(ISBLANK(E15), (SUM("
                 for i in sheet_percent_index_list[current_index]:
                     mark_str += "(B"+str(i)+"*C"+str(i)+"),"
@@ -273,14 +261,14 @@ while (option_select != '0'):
                 mark_str = mark_str[:-1]
                 mark_str += ")), E15)"
                 sheet["E2"] = mark_str
-                
+
                 course_str = "=SUM("
                 for i in sheet_percent_index_list[current_index]:
                     course_str += "C"+str(i)+","
                 course_str = course_str[:-1]
                 course_str += ")"
                 sheet["F2"] = course_str
-            
+
             cGPA = wb.create_sheet("cGPA")
             current_index = sheet_list.index(current_sheet)
             temp_s = current_sheet
@@ -294,27 +282,25 @@ while (option_select != '0'):
             cGPA["D8"].alignment = Alignment(horizontal='left')
             cGPA["D11"].font = ex_font
             cGPA["D11"].alignment = Alignment(horizontal='left')
-            
+
             cGPA_current = "=SUM("
             for sheet in sheet_list:
                 cGPA_current += sheet.title+"!E2,"
             cGPA_current += ")/"+str(len(sheet_list))
-            
+
             cGPA["D5"] = cGPA_current
             cGPA["D8"] = cGPA_current.replace("!E2,", "!E11,")
             cGPA["D11"] = cGPA_current.replace("!E2,", "!F11,")
-                
+
             wb.save(dest_filename+".xlsx")
             print("Saved!")
             wb.remove(cGPA)
-            current_sheet = temp_s                
-                
-                
+            current_sheet = temp_s
+
     if (option_select == '5'):
         current_sheet.title = input("Input new sheet name: ")
         sheet_names[current_index] = current_sheet.title
-        
-        
+
     if (option_select == '6'):
         temp = input("Input sheet to change to: ")
         if (temp in sheet_names):
@@ -323,18 +309,17 @@ while (option_select != '0'):
             print("Changed sheet to "+temp)
         else:
             print("Unable to find sheet in current sheet list")
-            
-            
+
     if (option_select == '7'):
         if (len(sheet_titles_list[current_index]) == 0):
-            print ("There are no entries to delete.")
+            print("There are no entries to delete.")
         else:
             print("Titles: "+", ".join(sheet_titles_list[current_index]))
             delete = input("Input the title of the entry to delete: ")
             if (delete in sheet_titles_list[current_index]):
                 del_index = sheet_titles_list[current_index].index(delete)
                 print(sheet_percent_index_list[current_index])
-                current_sheet.delete_rows(sheet_percent_index_list[current_index][del_index]-
+                current_sheet.delete_rows(sheet_percent_index_list[current_index][del_index] -
                                           sheet_heights_list[current_index][del_index]-1,
                                           sheet_percent_index_list[current_index][del_index]+1)
                 sheet_row_index_list[current_index] -= (sheet_heights_list[current_index][del_index]+3)
@@ -350,74 +335,69 @@ while (option_select != '0'):
                 sheet_titles_list[current_index].pop(del_index)
             else:
                 print("Title entry not found.")
-        
-        
+
     if (option_select == '8'):
         title = input("Input title of entry: ")
         subtitle = input("Input subtitles of entry: ")
         number = int(input("Input number of subtitles: "))
         worth = float(input("Input worth in % (decimals allowed): "))
-        
+
         sub_list = []
         for i in range(0, number):
             sub_list.append(subtitle+" "+str(i+1))
-        
+
         percent = []
         for i in range(0, number):
             percent.append((worth/number)*0.01)
-        
-        enter_section(sheet_row_index_list[current_index], number, 
-                      title, sub_list, percent,2,0)
-        
-        
+
+        enter_section(sheet_row_index_list[current_index], number,
+                      title, sub_list, percent, 2, 0)
+
     if (option_select == '9'):
         title = input("Input title of entry: ")
         subtitle = input("Input subtitles of entry: ")
         number = int(input("Input number of subtitles: "))
-        
+
         sub_list = []
         percent = []
         for i in range(0, number):
             sub_list.append(subtitle+" "+str(i+1))
             percent.append(float(input("Input worth in % for "+subtitle+" "+str(i+1)+": "))*0.01)
-        
-        enter_section(sheet_row_index_list[current_index], number, 
-                      title, sub_list, percent,3,0)
-        
-        
+
+        enter_section(sheet_row_index_list[current_index], number,
+                      title, sub_list, percent, 3, 0)
+
     if (option_select == '10'):
         title = input("Input title of entry: ")
         subtitle = input("Input subtitles of entry: ")
         number = int(input("Input number of subtitles: "))
         worth = float(input("Input worth in % (decimals allowed): "))
         topx = int(input("Input top x of "+str(number)+" to take into account: "))
-        
+
         sub_list = []
         for i in range(0, number):
             sub_list.append(subtitle+" "+str(i+1))
-        
+
         percent = []
         for i in range(0, number):
             percent.append((worth/topx)*0.01)
-        
-        enter_section(sheet_row_index_list[current_index], number, 
-                      title, sub_list, percent,4,topx)
-   
-   
+
+        enter_section(sheet_row_index_list[current_index], number,
+                      title, sub_list, percent, 4, topx)
+
     if (option_select == '11'):
         title = input("Input title of entry: ")
         subtitle = input("Input subtitle of entry: ")
         worth = float(input("Input worth in % (decimals allowed): "))
         enter_section(sheet_row_index_list[current_index], 1, title,
-                     [subtitle], [worth*0.01],1,0)
-    
+                      [subtitle], [worth*0.01], 1, 0)
 
     if (option_select == '12'):
         filename = input("Select name for saving settings (no extension): ")
         file = open(filename+".txt", 'w')
         file.write(dest_filename+'\n')
         file.write(str(len(sheet_names))+'\n\n\n')
-        
+
         for i in range(0, len(sheet_names)):
             file.write(sheet_names[i]+'\n')
             file.write(str(len(sheet_titles_list[i]))+'\n')
@@ -431,17 +411,15 @@ while (option_select != '0'):
                 file.write(str(sheet_types_list[i][x])+'\n')
                 file.write(str(sheet_topx_list[i][x])+'\n')
             file.write('\n')
-        
         file.close()
-    
-    
+
     if (option_select == '13'):
         filename = input("Input filename (extension included): ")
         file = open(filename, 'r')
-        
+
         for sheet in sheet_list:
             wb.remove(sheet)
-        
+
         sheet_list = []
         sheet_names = []
         sheet_row_index_list = []
@@ -452,15 +430,13 @@ while (option_select != '0'):
         sheet_percents_list = []
         sheet_types_list = []
         sheet_topx_list = []
-        
-        
+
         dest_filename = file.readline()[:-1]
         sheet_no = int(file.readline())
         file.readline()
         file.readline()
+
         for i in range(0, sheet_no):
-            
-            
             sheet_list.append(wb.create_sheet(file.readline()[:-1]))
             current_index = i
             sheet_names.append(sheet_list[-1].title)
@@ -473,7 +449,6 @@ while (option_select != '0'):
             sheet_percents_list.append([])
             sheet_types_list.append([])
             sheet_topx_list.append([])
-            
             for x in range(0, int(file.readline())):
                 title = file.readline()[:-1]
                 subtitles = []
@@ -485,12 +460,5 @@ while (option_select != '0'):
                 add_type = int(file.readline())
                 topx = int(file.readline())
                 enter_section(sheet_row_index_list[current_index],
-                              height, title, subtitles, percentages, add_type,topx)
+                              height, title, subtitles, percentages, add_type, topx)
             file.readline()
-            
-    
-
-                
-    
-            
-        
